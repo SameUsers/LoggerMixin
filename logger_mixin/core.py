@@ -97,3 +97,11 @@ class LoggerMixin(metaclass=MetaLogger):
         for handler in handlers:
             self._set_logger_formatter(handler)
         self._add_handlers(self._logger, handlers)
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
+
+    @property
+    def additional_logger(self) -> dict[str, logging.Logger]:
+        return self._additional_logger
