@@ -11,6 +11,7 @@
 - Добавлен параметр `name_by_date=True` для формирования имени основного логгера по текущей дате и времени UTC. Он не может использоваться одновременно с `logger_name`.
 - Добавлен метод `append_stream_logger(name)` для подключения дополнительного именованного логгера с выводом в консоль. Он использует `LOG_LEVEL` и общий формат сообщений; при наличии обработчиков новые не добавляются.
 - Добавлен словарь `_additional_logger` для хранения дополнительных логгеров. Оба метода сохраняют логгер в словарь; повторный вызов любого из них с уже зарегистрированным именем пропускается.
+- Добавлены публичные свойства `logger` для доступа к основному логгеру и `additional_logger` для получения дополнительных логгеров по имени.
 - Добавлен метод `append_file_logger(name)` для подключения дополнительного именованного логгера с записью в `LOG_DIR/<имя_класса>/<имя_логгера>.log` и ротацией (10 МБ, 5 резервных файлов, UTF-8). Он использует `LOG_LEVEL` и общий формат сообщений; при наличии обработчиков новые не добавляются. Символы `/` и `\` в имени файла заменяются на `_`.
 - Изменён путь файлов основного логгера: вместо `LOG_DIR/<имя_логгера>.log` используется `LOG_DIR/<имя_класса>/<имя_логгера>.log`. При обновлении следует учитывать новый путь; существующие файлы автоматически не переносятся.
 
@@ -75,14 +76,26 @@ class Test(LoggerMixin):
         super().__init__(logger_name="MyCustomLogger")
 
     def test(self) -> None:
-        self._logger.info("Информационное сообщение")
-        self._logger.warning("Предупреждение")
-        self._logger.error("Ошибка")
+        self.logger.info("Информационное сообщение")
+        self.logger.warning("Предупреждение")
+        self.logger.error("Ошибка")
 
 
 test = Test()
 test.test()
 ```
+
+### Доступ к основному логгеру
+
+Свойство `logger` возвращает основной объект `logging.Logger`. Внутри класса обращайтесь через `self.logger`, а снаружи — через свойство экземпляра:
+
+```python
+test.logger.info("Сообщение от основного логгера")
+test.logger.warning("Предупреждение")
+test.logger.error("Ошибка")
+```
+
+Основной логгер выводит сообщения в консоль и файл, если при инициализации у него ещё не было обработчиков. Свойство не имеет setter: присвоить ему другой логгер нельзя, но методы возвращённого объекта доступны.
 
 ### Автоматическое имя логгера
 
@@ -117,9 +130,12 @@ super().__init__(name_by_date=True)
 
 ### Дополнительные логгеры
 
-Методы `append_stream_logger(name)` и `append_file_logger(name)` подключают именованные логгеры для вывода в консоль и записи в файл соответственно:
+Методы `append_stream_logger(name)` и `append_file_logger(name)` подключают именованные логгеры для вывода в консоль и записи в файл соответственно. Они возвращают `None`; зарегистрированный логгер можно получить через словарь `additional_logger` по тому же имени:
 
 ```python
+from logger_mixin import LoggerMixin
+
+
 class Service(LoggerMixin):
     def __init__(self) -> None:
         super().__init__()
@@ -127,9 +143,27 @@ class Service(LoggerMixin):
         self.append_file_logger("service.audit")
 
     def run(self) -> None:
-        self._additional_logger["service.console"].info("Сервис запущен")
-        self._additional_logger["service.audit"].info("Операция выполнена")
+        self.logger.info("Запуск операции")
+        self.additional_logger["service.console"].info("Сервис запущен")
+        self.additional_logger["service.audit"].info("Операция выполнена")
+
+
+service = Service()
+service.run()
+
+audit_logger = service.additional_logger["service.audit"]
+audit_logger.warning("Сообщение от дополнительного логгера")
 ```
+
+Обращение к незарегистрированному имени через `additional_logger[name]` вызывает `KeyError`. Для необязательного логгера используйте `.get()`:
+
+```python
+audit_logger = service.additional_logger.get("service.audit")
+if audit_logger is not None:
+    audit_logger.info("Дополнительный логгер доступен")
+```
+
+Свойство `additional_logger` возвращает исходный словарь, а не копию. Для регистрации используйте методы `append_stream_logger()` и `append_file_logger()`, чтобы сохранить настройку обработчиков.
 
 Файловый логгер из примера пишет в `LOG_DIR/Service/service.audit.log`. Дополнительные логгеры используют `LOG_LEVEL` и общий формат сообщений. Они работают независимо от основного логгера: сообщения в них нужно отправлять явно.
 
