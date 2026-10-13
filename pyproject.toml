@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "logger-mixin"
-version = "1.0.0"
+version = "1.1.0"
 description = "Reusable Python logger mixin with file rotation"
 requires-python = ">=3.11"
 dependencies = []
