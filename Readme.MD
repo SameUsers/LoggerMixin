@@ -16,19 +16,53 @@
 
 ## Установка
 
-Установка напрямую из GitHub:
+**Требования:** Python 3.11+, `pip` и Git, доступный в `PATH`.
+
+### Установка напрямую из GitHub
+
+Установите библиотеку из ветки `main` в выбранное Python-окружение:
 
 ```bash
-pip install git+https://github.com/SameUsers/LoggerMixin.git
+python -m pip install "git+https://github.com/SameUsers/LoggerMixin.git@main"
 ```
 
 Или добавьте в `requirements.txt`:
 
 ```text
-git+https://github.com/SameUsers/LoggerMixin.git
+git+https://github.com/SameUsers/LoggerMixin.git@main
 ```
 
-**Требования:** Python 3.11+
+Затем установите зависимости:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Для установки конкретного состояния кода замените `main` после `@` на имя существующего тега или полный хеш коммита в удалённом репозитории.
+
+### Обновление из GitHub
+
+Чтобы установить актуальный код из `main`, в том числе если версия пакета не изменилась:
+
+```bash
+python -m pip install --upgrade --force-reinstall "git+https://github.com/SameUsers/LoggerMixin.git@main"
+```
+
+### Установка из локального клона
+
+```bash
+git clone https://github.com/SameUsers/LoggerMixin.git
+cd LoggerMixin
+python -m pip install .
+```
+
+Для разработки используйте `python -m pip install -e .` вместо обычной установки: изменения исходного кода будут доступны без переустановки пакета.
+
+Проверка установки:
+
+```bash
+python -c "from logger_mixin import LoggerMixin; print('LoggerMixin installed successfully')"
+```
 
 ## Использование
 
